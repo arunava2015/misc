@@ -1,0 +1,1212 @@
+
+<?php
+/**
+ * functions and definitions
+ *
+ * @link https://developer.wordpress.org/themes/basics/theme-functions/
+ *
+ * @package mled
+ */
+
+if ( ! defined( '_S_VERSION' ) ) {
+	// Replace the version number of the theme on each release.
+	define( '_S_VERSION', '1.0.0' );
+}
+
+/**
+ * Sets up theme defaults and registers support for various WordPress features.
+ *
+ * Note that this function is hooked into the after_setup_theme hook, which
+ * runs before the init hook. The init hook is too late for some features, such
+ * as indicating support for post thumbnails.
+ */
+function mled_setup() {
+	/*
+		* Make theme available for translation.
+		* Translations can be filed in the /languages/ directory.
+		* If you're building a theme based on mled, use a find and replace
+		* to change 'mled' to the name of your theme in all the template files.
+		*/
+	load_theme_textdomain( 'mled', get_template_directory() . '/languages' );
+
+	// Add default posts and comments RSS feed links to head.
+	add_theme_support( 'automatic-feed-links' );
+
+	/*
+		* Let WordPress manage the document title.
+		* By adding theme support, we declare that this theme does not use a
+		* hard-coded <title> tag in the document head, and expect WordPress to
+		* provide it for us.
+		*/
+	add_theme_support( 'title-tag' );
+
+	/*
+		* Enable support for Post Thumbnails on posts and pages.
+		*
+		* @link https://developer.wordpress.org/themes/functionality/featured-images-post-thumbnails/
+		*/
+	add_theme_support( 'post-thumbnails' );
+
+	// This theme uses wp_nav_menu() in one location.
+	register_nav_menus(
+		array(
+			'menu-1' => esc_html__( 'Primary', 'mled' ),
+		)
+	);
+
+	/*
+		* Switch default core markup for search form, comment form, and comments
+		* to output valid HTML5.
+		*/
+	add_theme_support(
+		'html5',
+		array(
+			'search-form',
+			'comment-form',
+			'comment-list',
+			'gallery',
+			'caption',
+			'style',
+			'script',
+		)
+	);
+
+	// Set up the WordPress core custom background feature.
+	add_theme_support(
+		'custom-background',
+		apply_filters(
+			'mled_custom_background_args',
+			array(
+				'default-color' => 'ffffff',
+				'default-image' => '',
+			)
+		)
+	);
+
+	// Add theme support for selective refresh for widgets.
+	add_theme_support( 'customize-selective-refresh-widgets' );
+
+	/**
+	 * Add support for core custom logo.
+	 *
+	 * @link https://codex.wordpress.org/Theme_Logo
+	 */
+	add_theme_support(
+		'custom-logo',
+		array(
+			'height'      => 250,
+			'width'       => 250,
+			'flex-width'  => true,
+			'flex-height' => true,
+		)
+	);
+}
+add_action( 'after_setup_theme', 'mled_setup' );
+
+/**
+ * Set the content width in pixels, based on the theme's design and stylesheet.
+ *
+ * Priority 0 to make it available to lower priority callbacks.
+ *
+ * @global int $content_width
+ */
+function mled_content_width() {
+	$GLOBALS['content_width'] = apply_filters( 'mled_content_width', 640 );
+}
+add_action( 'after_setup_theme', 'mled_content_width', 0 );
+
+/**
+ * Register widget area.
+ *
+ * @link https://developer.wordpress.org/themes/functionality/sidebars/#registering-a-sidebar
+ */
+function mled_widgets_init() {
+	register_sidebar(
+		array(
+			'name'          => esc_html__( 'Sidebar', 'mled' ),
+			'id'            => 'sidebar-1',
+			'description'   => esc_html__( 'Add widgets here.', 'mled' ),
+			'before_widget' => '<section id="%1$s" class="widget %2$s">',
+			'after_widget'  => '</section>',
+			'before_title'  => '<h2 class="widget-title">',
+			'after_title'   => '</h2>',
+		)
+	);
+}
+add_action( 'widgets_init', 'mled_widgets_init' );
+
+/**
+ * Enqueue scripts and styles.
+ */
+function mled_scripts() {
+	wp_enqueue_style( 'mled-style', get_stylesheet_uri(), array(), _S_VERSION );
+
+	wp_enqueue_script( 'jquery' ); 
+	wp_enqueue_style( 'dashicons' );
+		
+	wp_enqueue_script( 'mled-navigation', get_template_directory_uri() . '/js/navigation.js', array(), _S_VERSION, true );
+	wp_enqueue_script( 'mled-modernizr', get_template_directory_uri() . '/assets/js/vendor/modernizr.min.js', array(), _S_VERSION, true );
+	wp_enqueue_script( 'mled-popper', 'https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js', array(), null, false );
+	wp_enqueue_script( 'mled-bootstrap', 'https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js', array(), null, false );
+	wp_enqueue_script( 'mled-plugin', get_template_directory_uri() . '/assets/js/plugin.js', array(), _S_VERSION, true );
+	wp_enqueue_script( 'mled-custom', get_template_directory_uri() . '/assets/js/custom.js', array(), _S_VERSION, true );
+
+	wp_enqueue_style( 'mled-bootstrap', get_template_directory_uri() . '/assets/css/bootstrap.min.css', array(), null, false );
+	wp_enqueue_style( 'mled-googlefont', 'https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap', array(), null, false );
+	wp_enqueue_style( 'mled-custom', get_template_directory_uri() . '/assets/css/style.css', array(), _S_VERSION, 'all' );
+
+	//custom field image for banners 
+	$desktopImg = get_field('banner_image');  
+	$mobileImg = get_field('banner_image_mobile');  
+    $args = array( 'desktopImg' => $desktopImg, 'mobileImg' => $mobileImg );
+    wp_localize_script( 'mled-custom', 'microledassoc', $args);	
+
+	if ( is_singular() && comments_open() && get_option( 'thread_comments' ) ) {
+		wp_enqueue_script( 'comment-reply' );
+	}
+}
+add_action( 'wp_enqueue_scripts', 'mled_scripts' );
+
+/**
+ * Implement the Custom Header feature.
+ */
+require get_template_directory() . '/inc/custom-header.php';
+
+/**
+ * Custom template tags for this theme.
+ */
+require get_template_directory() . '/inc/template-tags.php';
+
+/**
+ * Functions which enhance the theme by hooking into WordPress.
+ */
+require get_template_directory() . '/inc/template-functions.php';
+
+/**
+ * Customizer additions.
+ */
+require get_template_directory() . '/inc/customizer.php';
+
+/**
+ * Load Jetpack compatibility file.
+ */
+if ( defined( 'JETPACK__VERSION' ) ) {
+	require get_template_directory() . '/inc/jetpack.php';
+}
+
+// Menu for logged in and logout user
+function my_wp_nav_menu_args( $args = '' ) {
+if( is_user_logged_in() ) {
+// Logged in menu to display
+$args['menu'] = 5;
+ 
+} else {
+// Non-logged-in menu to display
+$args['menu'] = 3;
+}
+return $args;
+}
+add_filter( 'wp_nav_menu_args', 'my_wp_nav_menu_args' );
+
+
+// Custom post type for members
+function members_init() {
+
+$labels = array(
+	'name' => 'Members',
+	'singular_name' => 'All Members',
+	'add_new' => _x('Add New Member', 'Member'),
+	'add_new_item' => __('Add New Member'),
+	'edit_item' => __('Edit Member'),
+	'new_item' => __('New Member'),
+	'view_item' => __('View Member'),
+	'search_items' => __('Search Members'),
+	'not_found' =>  __('No Members have been added yet'),
+	'not_found_in_trash' => __('No Members found in Trash'),
+	'parent_item_colon' => '',
+);
+
+$args = array(
+	'labels' => $labels,
+	'public' => true,
+	'show_ui' => true,
+	'show_in_menu' => true,
+	'show_in_nav_menus' => false,
+	'rewrite' => array( 'slug' => 'members'),
+	'supports' => array('title', 'editor', 'thumbnail', 'author', 'excerpt'),
+	'has_archive' => true,
+	'exclude_from_search' => false,
+	'menu_icon'   => 'dashicons-businessperson',
+	'show_admin_column' => true,
+	'show_in_rest' => true,
+   );
+register_post_type( 'member' , $args );
+
+}
+add_action( 'init', 'members_init' );
+
+// logout page redirect to home page
+add_filter( 'login_redirect', 'login_redirect_member_home', 10, 3 );
+function login_redirect_member_home( $redirect_to, $request, $user ) {
+    $defined_user_role = 'subscriber'; // The defined user role
+
+    if( isset($user->roles) && is_array($user->roles) && in_array( $defined_user_role, $user->roles ) ) {
+        $redirect_to = home_url(); // Custom redirection url
+
+        wp_safe_redirect( $redirect_to ); // Force redirection
+        exit(); // Mandatory to avoid errors
+    }
+    return $redirect_to;
+}
+
+//hide subscriber wp tool bar
+function hide_admin_bar( $show ) {
+    if ( ! current_user_can( 'administrator' ) ) {
+        return false;
+    }
+
+    return $show;
+}
+add_filter( 'show_admin_bar', 'hide_admin_bar' );
+
+
+// login page logo change.
+function my_login_logo_one() { 
+	?> 
+	<style type="text/css"> 
+		body.login div#login h1 a {
+			 background-image: url(<?php echo get_template_directory_uri().'/assets/images/logo.png'; ?>);
+			 background-size: 200px;
+			 height: unset;
+			 width: unset; 
+		} 
+	</style>
+	<?php 
+} 
+add_action( 'login_enqueue_scripts', 'my_login_logo_one' );
+
+function mla_modify_login_headerurl( $login_header_url ) {
+    $login_header_url = site_url();
+
+    return $login_header_url;
+}
+add_filter( 'login_headerurl', 'mla_modify_login_headerurl' );
+
+function mla_modify_login_headertext( $login_header_text ) {
+    $login_header_text = "mled";
+
+    return $login_header_text;
+}
+add_filter( 'login_headertext', 'mla_modify_login_headertext' );
+
+
+// Custom post type for events - 15-12-2022 - BY CN
+function events_init() {
+
+	$labels = array(
+		'name' => 'Events',
+		'singular_name' => 'All Events',
+		'add_new' => _x('Add New Event', 'mled'),
+		'add_new_item' => __('Add New Event'),
+		'edit_item' => __('Edit Event'),
+		'new_item' => __('New Event'),
+		'view_item' => __('View Event'),
+		'search_items' => __('Search Events'),
+		'not_found' =>  __('No Events have been added yet'),
+		'not_found_in_trash' => __('No Events found in Trash'),
+		'parent_item_colon' => '',
+	);
+	
+	$args = array(
+		'labels' => $labels,
+		'public' => true,
+		'show_ui' => true,
+		'show_in_menu' => true,
+		'show_in_nav_menus' => false,
+		'rewrite' => array( 'slug' => 'our-events'),
+		'supports' => array('title', 'editor', 'thumbnail', 'author', 'excerpt'),
+		'has_archive' => true,
+		'exclude_from_search' => false,
+		'menu_icon'   => 'dashicons-businessperson',
+		'show_admin_column' => true,
+		'show_in_rest' => true,
+	   );
+
+	register_post_type( 'event' , $args );
+	
+}
+
+add_action( 'init', 'events_init' );
+
+
+function mlib_init() {
+
+	$labels = array(
+		'name' => 'Mlib',
+		'singular_name' => 'All MLib',
+		'add_new' => _x('Add New MLib', 'mled'),
+		'add_new_item' => __('Add New MLib'),
+		'edit_item' => __('Edit MLib'),
+		'new_item' => __('New MLib'),
+		'view_item' => __('View MLib'),
+		'search_items' => __('Search MLib'),
+		'not_found' =>  __('No MLib have been added yet'),
+		'not_found_in_trash' => __('No MLib found in Trash'),
+		'parent_item_colon' => '',
+	);
+	
+	$args = array(
+		'labels' => $labels,
+		'public' => true,
+		'show_ui' => true,
+		'show_in_menu' => true,
+		'show_in_nav_menus' => false,
+		'rewrite' => array( 'slug' => 'mlib'),
+		'supports' => array('title', 'excerpt' , 'editor'),
+		'taxonomies' => array( 'post_tag' ),
+		'has_archive' => true,
+		'exclude_from_search' => false,
+		'menu_icon'   => 'dashicons-book',
+		'show_admin_column' => true,
+		'show_in_rest' => true,
+	);
+
+	register_post_type( 'mlib' , $args );
+	
+}
+
+add_action( 'init', 'melib_init' );
+
+//------------------------------------
+//create a column for mlib
+//------------------------------------
+add_filter( 'manage_mlib_posts_columns', 'func_manage_mlib_posts_column' );
+function func_manage_mlib_posts_column($columns){ 
+	$columns['modified_date'] = __('Modified On', 'mled'); 
+	return $columns;
+}
+add_action('manage_mlib_posts_custom_column', 'func_manage_mlib_posts_custom_column', 10, 2 );
+function func_manage_mlib_posts_custom_column( $column, $post_id){ 
+	switch($column){ 
+		case 'modified_date': 
+			$modDate = get_the_modified_date( '', $post_id );
+			echo $modDate; 
+		break; 
+	}
+}
+add_action('admin_head','func_add_css_for_mlib_customcolumn'); 
+function func_add_css_for_mlib_customcolumn(){
+	$screen = get_current_screen(); 
+	if( $screen->post_type == "mlib"){
+		echo '<style type="text/css">';
+    	echo 'table.fixed{ table-layout:auto; }';
+    	echo '</style>';
+	}
+}
+
+
+/**
+ * Redirect to archive page 
+ */ 
+function redirect_for_custom_posttypes( $query ) { 
+    if( is_tag() && $query->is_main_query() ) { 
+    	//$ctag = (get_query_var('tag')) ? get_query_var('tag') : ''; 
+   		// $post_types = get_post_types();
+   		$post_types = array('media-library');
+   		$query->set('post_type',$post_types); 
+    }
+}
+add_filter('pre_get_posts','redirect_for_custom_posttypes');
+
+
+/**-----------------------------------*
+ * Add file for conference post types
+ *------------------------------------*/ 
+require get_template_directory() . '/inc/conference_custom_posts.php'; 
+
+------------------------------------------------------------------------
+
+custom-posts.php
+-----------------
+<?php
+/**
+ * mled conference 
+ * 
+ * @package mled
+ */
+
+//-------
+// setup
+//-------
+function conference_init() {
+	$labels = array(
+		'name' => 'Conferences',
+		'singular_name' => 'All Conferences',
+		'add_new' => _x('Add New Conference', 'mled'),
+		'add_new_item' => __('Add Conference'),
+		'edit_item' => __('Edit Conference'),
+		'new_item' => __('New Conferences'),
+		'view_item' => __('View Conferences'),
+		'search_items' => __('Search Conferences'),
+		'not_found' =>  __('No Conferences have been added yet'),
+		'not_found_in_trash' => __('No Conferences found in Trash'),
+		'parent_item_colon' => '',
+	);
+
+	$args = array(
+		'labels' => $labels,
+		'public' => true,
+		'show_ui' => true,
+		'show_in_menu' => true,
+		'show_in_nav_menus' => false,
+		'rewrite' => array( 'slug' => 'conferences'),
+		'supports' => array('title', 'excerpt' , 'editor', 'thumbnail'),
+		//'taxonomies' => array( 'post_tag' ),
+		'has_archive' => true,
+		'exclude_from_search' => false,
+		'menu_icon'   => 'dashicons-book',
+		'show_admin_column' => true,
+		'show_in_rest' => true,
+	);
+	register_post_type( 'conference' , $args );
+}
+add_action( 'init', 'conference_init' ); 
+
+
+/**
+ * Action for WP_QUERY 
+ */ 
+add_action('pre_get_posts', 'pre_get_posts_conferences');
+function pre_get_posts_conferences( $query ) {
+    
+    if( !is_admin() && isset($query->query_vars['post_type']) && $query->query_vars['post_type'] == 'conference' ) {
+       $query->set('orderby', 'meta_value_num');    
+       $query->set('meta_key', 'conference_start_date');    
+       $query->set('order', 'DESC');         
+    }
+    return $query;
+}
+------------------------------------------------------------------------------------------------------------------
+
+global $post; 
+$user_id = get_current_user_id(); 
+$user_companyname = get_user_meta($user_id,'user_company_name',true);  
+
+-------------------------------------------------------------------------------------------------------------
+
+.ribbon-wrapper { width: 85px; height: 88px; overflow: hidden; position: absolute; top: -3px; left: -3px; }
+.ribbon { font: bold 15px sans-serif; color: #333; text-align: center; position: relative; padding: 7px 0;
+	top: 15px; left: -30px; width: 120px; background-color: #ebb134; color: #fff;
+    -webkit-transform: rotate(-45deg); -moz-transform: rotate(-45deg); -ms-transform: rotate(-45deg);
+    -o-transform: rotate(-45deg);
+}
+
+.ribbon-wrapper { width: 85px; height: 88px; overflow: hidden; position: absolute; top: -3px; left: -3px; /* right: -3px; */ }
+.ribbon { font: bold 11px sans-serif; color: #333; text-align: center; position: relative; padding: 4px 0;
+	top: 8px; left: -30px; width: 120px; background-color: #2b3069; color: #fff; } 
+
+-------------------------------------------------------------------------------------------------------------
+
+            <div class="tag-cloud">
+				<div class="tag-cloud-text">Filter By Category:</div>
+                <div class="tag-cloud-tags">				
+            	<?php if(!is_user_logged_in()) { ?>
+            	<?php $termIds = array(); ?>  
+                <?php /* $pargs = array('posts_per_page' => -1,'post_status' => 'publish', 
+									 'meta_key'=> 'group_type','meta_value' => 'public',
+									 'meta_compare' => '==','post_type' => 'media-library',
+									 'fields' => 'ids',); */ ?>
+                <?php $pargs = array('posts_per_page' => -1,'post_status' => 'publish', 
+                                     'post_type' => 'media-library','fields' => 'ids',); ?>
+                <?php $fieldIds = get_posts($pargs); ?>
+                <?php if(!empty($fieldIds)){ ?>
+                <?php foreach($fieldIds as $fieldId){ ?>
+                <?php   $pTags = wp_get_post_terms($fieldId,'post_tag'); ?> 
+                <?php   foreach($pTags as $ptag){ array_push($termIds,$ptag->term_id); } ?>
+                <?php } //endforeach ?>      
+                <?php } //endif ?>
+                <?php $membertags = wp_tag_cloud(array('post_type'=>'member','format'=>'array',
+													   'echo'=>0,'include'=>$termIds)); ?>
+                <?php foreach($membertags as $mtag){ ?>
+                <?php $mtag_styleremoved = preg_replace('/(<[^>]+) style=".*?"/i', '$1', $mtag); ?> 
+                <?php echo $mtag_styleremoved; } ?>
+                <?php if(count($membertags) > 0 && (strstr($_SERVER['REQUEST_URI'],'/library/tag'))){ ?>
+                <?php $html = '<a href="'. get_bloginfo('url') .'/library/" class="tag-cloud-link tag-link-8 tag-link-position-3 cleartag" '; ?>
+                <?php $html .= 'aria-label="Members Main Link">Clear Categories</a>'; ?>
+                <?php echo $html; ?> 
+                <?php } ?>
+                <?php } else{ ?>
+                <?php $membertags = wp_tag_cloud(array('post_type'=>'member','format'=>'array',
+													   'echo'=>0)); ?>
+                <?php foreach($membertags as $mtag){ ?>
+                <?php $mtag_styleremoved = preg_replace('/(<[^>]+) style=".*?"/i', '$1', $mtag); ?> 
+                <?php echo $mtag_styleremoved; } ?>
+                <?php if(count($membertags) > 0 && (strstr($_SERVER['REQUEST_URI'],'/library/tag'))){ ?>
+                <?php $html = '<a href="'. get_bloginfo('url') .'/library/" class="tag-cloud-link tag-link-8 tag-link-position-3 cleartag" '; ?>
+                <?php $html .= 'aria-label="Members Main Link">Clear Categories</a>'; ?>
+                <?php echo $html; ?> 
+                <?php }} ?>
+                </div>
+             </div> 			
+----------------------------------------------------------------------------------------------
+        <?php
+        global $wpdb;
+		$tag = ( get_query_var( 'tag' ) ) ? get_query_var( 'tag' ) : ''; 
+        $paged = ( get_query_var( 'paged' ) ) ? get_query_var( 'paged' ) : 1; 
+        
+		/*if(!is_user_logged_in()){ 
+			if($tag == ""){
+        	$args = array(
+            	'post_type'      => 'mlib',
+            	'post_status'    => 'publish',
+            	'posts_per_page' => 25,
+            	'paged' => $paged,
+            	/*'orderby' => 'ID',*
+                'orderby' => 'modified',
+            	'order' => 'DESC', 
+				'meta_key'=> 'group_type',
+				'meta_value' => 'public',
+				'meta_compare' => '=='
+        	);
+			}else{ 
+       		$args = array(
+            	'post_type'      => 'mlib',
+            	'post_status'    => 'publish',
+            	'posts_per_page' => 25,
+            	'paged' => $paged,
+            	/*'orderby' => 'ID',*
+                'orderby' => 'modified',
+            	'order' => 'DESC', 
+				'meta_key'=> 'group_type',
+				'meta_value' => 'public',
+				'meta_compare' => '==',
+                'tag_slug__in' => array($tag),				
+        	);
+			}	
+		}else{ 
+			if($tag == ""){			
+        	$args = array(
+            	'post_type'      => 'mlib',
+            	'post_status'    => 'publish',
+            	'posts_per_page' => 25,
+            	'paged' => $paged,
+            	'orderby' => 'ID',
+            	'order' => 'DESC', 
+        	);
+			} else {
+        	$args = array(
+            	'post_type'      => 'mlib',
+            	'post_status'    => 'publish',
+            	'posts_per_page' => 25,
+            	'paged' => $paged,
+            	'orderby' => 'ID',
+            	'order' => 'DESC', 
+                'tag_slug__in' => array($tag),								
+        	);				
+			}	
+		} */
+
+        if($tag == ""){         
+            $args = array(
+                'post_type'      => 'mlib',
+                'post_status'    => 'publish',
+                'posts_per_page' => 25,
+                'paged' => $paged,
+                'orderby' => 'ID',
+                'order' => 'DESC', 
+            );
+        } else {
+            $args = array(
+                'post_type'      => 'mlib',
+                'post_status'    => 'publish',
+                'posts_per_page' => 25,
+                'paged' => $paged,
+                'orderby' => 'ID',
+                'order' => 'DESC', 
+                'tag_slug__in' => array($tag),                              
+            );              
+        }   
+        $query = new WP_Query( $args );
+
+        //if ( $query->have_posts() ) {
+            while ( $query->have_posts() ) : 
+              $query->the_post();
+              
+              ?>
+              <div class="col-md-6">
+                <div class="mla-botbox mla-botbox-item js-eqh">
+                  <div>
+                    <h5><?php echo esc_html( get_the_title() ); ?></h5> 
+					  <p><?php echo esc_html( get_the_excerpt() ); ?></p> 
+                      <a class="mla-btn" href="<?php the_permalink();?>">See More</a>
+                  </div>
+                </div>
+              </div>
+              <?php endwhile; ?>
+              <!-- <div class="row"> -->
+              <div class="col-md-12 plr-50 text-center">
+              <div class="pagination">
+                 <?php
+                 $big = 999999999;
+                 echo paginate_links( array(
+                      'base' => str_replace( $big, '%#%', get_pagenum_link( $big ) ),
+                      'format' => '?paged=%#%',
+                      'current' => max( 1, get_query_var('paged') ),
+                      'total' => $query->max_num_pages,
+                      'prev_text' => '&laquo;',
+                      'next_text' => '&raquo;'
+                 ) );
+                ?>
+              </div>
+              </div>
+              <!-- </div> -->
+            <?php wp_reset_postdata(); ?>
+----------------------------------------------------------------------------------------------------
+<script>
+document.addEventListener('DOMContentLoaded', function(){ 
+	let path = window.location.pathname; 
+    let tags = document.querySelectorAll('.tag-cloud-tags > a');
+    tags.forEach(function(item, indx){  
+       let itemtext = item.innerText.toLowerCase(); let itemtextmod = ''; console.log()
+       if( /\s/g.test(itemtext) ){ itemtextmod = itemtext.replace(" ", "-"); } 
+       //if itemtextmod is not empty, check with that 
+       if( itemtextmod != '' ){
+		  if( path.match('/'+itemtextmod+'/') ){ item.style.background = '#2b3069'; item.style.border = "5px solid #d5cdcd"; } 
+          //if( path.indexOf(itemtextmod) > 1 ){ item.style.background = '#2b3069'; }
+       }else{
+		  if( path.match('/'+itemtext+'/') ){ item.style.background = '#2b3069'; item.style.border = "5px solid #d5cdcd"; }  
+          //if( path.indexOf(itemtext) > 1 ){ item.style.background = '#2b3069'; }
+       }
+    });
+});
+
+(function($){ 
+    $(document).ready(function($){ 
+      let path = window.location.pathname;
+      if( path.match("/lib/") ){ 
+        let items = $('div.mla-members').find('.mla-botbox-item');  
+        $.each(items, function(indx, ele){ 
+          let href = $(ele).find('a.mla-btn').attr('href');                 
+          $(ele).css('cursor', 'pointer'); 
+          $(ele).wrap('<a style="color:#212529" href="'+href+'" target="_blank"></a>'); 
+          //do not display "see more button"
+          $(ele).find('a.mla-btn').css('display','none');           
+          $(ele).on('mouseover', function(){ $(this).css('border','3px solid #938fc7'); }); 
+          $(ele).on('mouseleave', function(){ $(this).css('border','1px solid #7694d3'); });                    
+        });
+      }
+    });
+}(jQuery));
+</script>  
+-----------------------------------------------------------------------------------------------------------------
+
+          <?php if ( is_user_logged_in() ) : ?>
+          <div class="row">
+            <div class="col plr-50">
+              <div class="row">  
+                <div class="col-md-10 offset-md-1">
+                  <div class="mla-botbox member-box" style="display:block;">            
+                    <div class="conference-register"> 
+                      <div class="top-div">
+                        <p class="heading">Conference Registrations:</p>
+                      </div>              
+                      <div class="row">
+                        <div class="col-xl-7">  
+                          <div class="registered-listing">
+                          <div class="header"><p class="heading">Registration Listings</p></div>
+                          <?php $confRegData = unserialize(get_post_meta($post->ID,'conference_regdata',true)); ?>
+                          <div class="listing-status">
+                             <?php $attending = 0; $exhibiting = 0; $lecturing = 0; ?> 
+                             <?php if( ($confRegData !== "") && ($confRegData !== false) ){ ?>
+                             <?php foreach($confRegData as $details){  
+                                    if(strstr($details['participation'],'attending')){ $attending++; }
+                                    if(strstr($details['participation'],'exhibiting')){ $exhibiting++; }                                    
+                                    if(strstr($details['participation'],'lecture')){ $lecturing++; }
+                             }} //endif ?>
+                             <div class="members-attend">
+                                <span class="text">Att :</span><span class="number"><?php echo $attending; ?></span>
+                             </div>
+                             <div class="members-exhibit">
+                                <span class="text">Exh :</span><span class="number"><?php echo $exhibiting; ?></span>
+                             </div>
+                             <div class="members-lecture">
+                                <span class="text">Lect :</span><span class="number"><?php echo $lecturing; ?></span>
+                             </div> 
+                          </div>
+                          <div class="listings"> 
+                          <?php if( ($confRegData !== "") && ($confRegData !== false) ){ ?>  
+                          <?php foreach($confRegData as $details){ ?>
+                                <div class="litem">
+                                  <div class="cname"><?php echo $details['company_name'];?></div>
+                                  <div class="tkpart">(<?php echo $details['participation'];?>)</div>
+                                </div>                                  
+                          <?php }} //endif ?> 
+                          </div> 
+                          </div>
+                        </div>
+                        <div class="col-xl-5">
+                          <div class="registration-form">
+                           <div class="header"><p class="heading">Enter Details To Register:</p></div> 
+                           <div class="mla-botbox mla-botbox-item" style="text-align:left;justify-content: left;">
+                            <div class="remove-registration">
+                              <span class="tooltip-text">Remove Registration</span>
+                              <span class="dashicons dashicons-dismiss remove"></span>
+                              <input type="hidden" name="conf_register_rmuid" id="conf_register_rmuid" value="<?php echo $user_id; ?>"/>
+                              <input type="hidden" name="conf_register_rmpid" id="conf_register_rmpid" value="<?php echo $post->ID; ?>"/>
+                            </div>
+                            <form id="conf-register">
+                            <div class="form-div">
+                              <h3>Company Name:</h3> 
+                              <p><input type="text" name="conf_register_companyname" id="conf_register_companyname" 
+                                        placeholder="Enter Company Name" value="<?php echo $user_companyname; ?>"/>
+                                 <input type="hidden" name="conf_register_uid" id="conf_register_uid" value="<?php echo $user_id; ?>"/>
+                                 <input type="hidden" name="conf_register_pid" id="conf_register_pid" value="<?php echo $post->ID; ?>"/>
+                               </p>
+                              <h3>Participation Type:</h3> 
+                              <p>
+                                <label><input type="checkbox" name="conf_register_participation" value="attending"/> Attending </label><br/>
+                                <label><input type="checkbox" name="conf_register_participation" value="exhibiting"/> Exhibiting </label><br/>
+                                <label><input type="checkbox" name="conf_register_participation" value="lecture"/> Lecture </label><br/>  
+                              </p>
+                              <p><a class="mla-btn" href="javascript:void(0)" name="submit-confreg" id="submit-confreg">Submit Registration</a></p>
+                              <p class="messages"></p>
+                            </div><!--/form-div -->
+                            </form>
+                           </div><!-- /mla-botbox --> 
+                          </div> 
+                        </div>
+                      </div>  
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>  
+          </div>
+          <?php endif; ?>
+-----------------------------------------------------------------------------------------------------------------------------------
+//script
+//match height function
+function equalHeight() {
+    jQuery(".js-eqh").matchHeight();
+}
+
+var width = jQuery(window).width();
+
+jQuery(document).ready(function(){
+   //eqh function
+   jQuery(window).on('resize', function() {
+        setTimeout(function() {
+            equalHeight();
+        }, 500);
+    });
+
+    jQuery('.m-menu').click(function(){
+        jQuery(this).toggleClass('close');
+      jQuery('.mla-navigation').toggleClass('active');
+    });
+
+//});
+
+//jQuery(window).on('load', function(){
+    //preloader
+    jQuery(".o-preloader__status").fadeOut();
+    jQuery(".js-preloader").delay(50).fadeOut("slow",function(){
+    });
+    equalHeight();
+});
+
+window.addEventListener('DOMContentLoaded', function(event){   
+   const checkMediaViewport = window.matchMedia("(max-width: 767px)").matches; 
+   if( !checkMediaViewport ){ 
+       let backgroundImg = microledassoc.desktopImg; 
+	   if(backgroundImg){
+       jQuery(document).find('section.mla-banner').css({
+          "background-image": "url("+backgroundImg+")", 
+          "background-position": "center", 
+          "background-size": "cover", 
+          "object-fit": "cover", 
+          "height": "auto",
+          "margin-top": "0",   
+       }); 
+	   }	   
+   }else{ 
+       let backgroundImg = microledassoc.mobileImg; 
+	   if(backgroundImg){ 
+       jQuery(document).find('section.mla-banner').css({
+          "background-image": "url("+backgroundImg+")", 
+          "background-position": "center", 
+          "background-size": "cover",
+          "object-fit": "cover",
+          "height": "517px",
+          "margin-top": "0",          
+       }); 
+	   }	   
+   }
+});
+
+window.addEventListener('resize', function(event){   
+   const checkMediaViewport = window.matchMedia("(max-width: 767px)").matches; 
+   if( !checkMediaViewport ){ 
+	   let backgroundImg = microledassoc.desktopImg; 
+	   if(backgroundImg){
+       jQuery(document).find('section.mla-banner').css({
+          "background-image": "url("+backgroundImg+")", 
+          "background-position": "center", 
+          "background-size": "cover", 
+          "object-fit": "cover",
+          "margin-top": "0",
+          "height": "auto",
+       });
+	   }	   
+   }else{ 
+       let backgroundImg = microledassoc.mobileImg; 
+	   if(backgroundImg){
+       jQuery(document).find('section.mla-banner').css({
+          "background-image": "url("+backgroundImg+")", 
+          "background-position": "center", 
+          "background-size": "cover",
+          "object-fit": "cover",
+          "height": "517px",
+          "margin-top": "0",          
+       });
+	   }	   
+   }
+});
+
+// jQuery('.menu-item-has-children > a').click(function(event) {
+//    jQuery(this).next('.sub-menu').slideToggle().toggleClass('selected');
+// });
+
+jQuery('.menu-item-has-children > a').on('click', function(e) {
+  e.preventDefault();
+  jQuery('.menu-item-has-children').toggleClass('active');
+  
+  var submenu = jQuery('.menu-item-has-children').children('.sub-menu');
+  submenu.toggleClass('active');
+  if (jQuery(submenu).is(':hidden')) {
+    jQuery(submenu).slideDown(200);
+  } else {
+    jQuery(submenu).slideUp(200);
+  }
+});
+
+
+/**------------------------------*
+ * Submit the conference form 
+ *-------------------------------*/ 
+jQuery('a[name="submit-confreg"]').on('click', function(){
+    var submitBtn = jQuery(this); 
+    var topparentForm = jQuery(submitBtn).parent().parent().parent(); 
+    var regdata = jQuery(topparentForm).serializeArray(); 
+    var message = topparentForm.find('p.messages');
+    var error = 0; var data = {}; //console.log( regdata );
+
+    //if regdata is not defined && check regdata
+    if( !regdata ){ 
+        jQuery(message).append('<span style="color:#FF0000;">All Fields Are Required</span>'); 
+        setTimeout(function(){ jQuery(message).empty(); }, 3000); error = 1; 
+    }else{ 
+        jQuery.each(regdata, function(indx, objval){ 
+            if( (objval.name == "conf_register_companyname") && (!objval.value) ){ 
+                jQuery(message).append('<span style="color:#FF0000;">Company Name Is A Required Field</span>'); 
+                setTimeout(function(){ jQuery(message).empty(); }, 3000); error = 1; return false; 
+            }else if( ( regdata.length == 3 ) && ( objval.name != "conf_register_participation") ){
+                jQuery(message).append('<span style="color:#FF0000;">Participation Type Is A Required Field</span>'); 
+                setTimeout(function(){ jQuery(message).empty(); }, 3000); error = 1; return false;                 
+            }else if( (objval.name == "conf_register_participation") && (!objval.value) ){ 
+                jQuery(message).append('<span style="color:#FF0000;">Participation Type Is A Required Field</span>'); 
+                setTimeout(function(){ jQuery(message).empty(); }, 3000); error = 1; return false; 
+            }           
+        });
+    }
+
+    // if error then return false
+    if( error == 1 ){ return false; }
+    else{ 
+       jQuery(message).append('<span style="color:#FF0000;">Submitting Data....</span>'); 
+       //setTimeout(function(){ jQuery(message).empty(); }, 3000); 
+       //create a data array from regdata
+       jQuery.each(regdata, function(indx, objval){ 
+            if( objval.name == "conf_register_companyname" ){ 
+              if( data.hasOwnProperty("company_name") ){ data["company_name"] = objval.value;
+              }else{ data["company_name"] = objval.value; }
+            }
+            if( objval.name == "conf_register_uid" ){ 
+              if( data.hasOwnProperty("uid") ){ data["uid"] = objval.value;
+              }else{ data["uid"] = objval.value; }
+            }
+            if( objval.name == "conf_register_pid" ){ 
+              if( data.hasOwnProperty("pid") ){ data["pid"] = objval.value;
+              }else{ data["pid"] = objval.value; }
+            }
+            if( objval.name == "conf_register_participation" ){ 
+              if( data.hasOwnProperty("participation_type") ){ 
+                var participationVal = data["participation_type"]; 
+                if( participationVal != "" ){
+                    participationVal = participationVal + "," + objval.value;
+                    data["participation_type"] = participationVal;
+                }else{ data["participation_type"] = objval.value; }
+              }else{ data["participation_type"] = objval.value; }
+            }
+       });
+    }
+    //console.log('Data',data); console.log('String Data', JSON.stringify(data)); 
+    if(! data ){ console.log('Submission Of Empty Conference Data'); return false; } 
+    var xhrdatastr = 'data='+JSON.stringify(data)+'&action=add_conference_formsubmit_regdata';
+    var submissionResult = submit_Data(xhrdatastr);  
+    var recvResult = submissionResult
+    .then(function(result){
+        var resultObj = JSON.parse(result); 
+        //if error 
+        if( resultObj.success == false ){
+            jQuery(message).empty();
+            jQuery(message).append('<span style="color:#FF0000;">'+resultObj.msg+'</span>');
+            setTimeout(function(){ jQuery(message).empty(); },6000);  
+            jQuery(topparentForm).find('input[type="checkbox"]').each(function(){ 
+                this.checked = false;
+            });
+
+        } else if( resultObj.success == true && resultObj.modified == true ){ 
+            jQuery(message).empty();
+            jQuery(message).append('<span style="color:#163a12;">'+resultObj.msg+'</span>');
+            setTimeout(function(){ jQuery(message).empty(); },6000);
+            jQuery(topparentForm).find('input[type="checkbox"]').each(function(){ 
+                this.checked = false;
+            });
+            jQuery('.remove-registration').removeAttr("style");
+            jQuery('.remove-registration').css("display","block");
+            // div for listings 
+            var listingDiv = jQuery(".conference-register").find(".listings"); 
+            var compname = resultObj.cname; var participation = resultObj.participation;
+            var prevparticipation = ''; 
+            jQuery(listingDiv).find('.litem').each(function(){
+                var litem = jQuery(this); 
+                var cnameText = jQuery(litem).find('.cname').text();
+                if(  cnameText === compname ){
+                   prevparticipation = jQuery(litem).find('.tkpart').text();
+                   jQuery(litem).find('.tkpart').text("("+participation+")"); 
+                }
+            });
+            //remove previous count
+            if(prevparticipation.indexOf('attending') > -1){ 
+              var currentCnt = jQuery('.registered-listing').find('.members-attend > .number').text(); 
+              var addedCnt = parseInt(currentCnt) - 1; 
+              jQuery('.registered-listing').find('.members-attend > .number').text(addedCnt);                  
+            }
+            if(prevparticipation.indexOf('exhibiting') > -1){ 
+              var currentCnt = jQuery('.registered-listing').find('.members-exhibit > .number').text();   
+              var addedCnt = parseInt(currentCnt) - 1; 
+              jQuery('.registered-listing').find('.members-exhibit > .number').text(addedCnt);
+            } 
+            if(prevparticipation.indexOf('lecture') > -1){ 
+              var currentCnt = jQuery('.registered-listing').find('.members-lecture > .number').text(); 
+              var addedCnt = parseInt(currentCnt) - 1; 
+              jQuery('.registered-listing').find('.members-lecture > .number').text(addedCnt); 
+            } 
+            //modify the count
+            if(participation.indexOf('attending') > -1){ 
+              var currentCnt = jQuery('.registered-listing').find('.members-attend > .number').text(); 
+              var addedCnt = parseInt(currentCnt) + 1; 
+              jQuery('.registered-listing').find('.members-attend > .number').text(addedCnt);                  
+            }
+            if(participation.indexOf('exhibiting') > -1){ 
+              var currentCnt = jQuery('.registered-listing').find('.members-exhibit > .number').text();   
+              var addedCnt = parseInt(currentCnt) + 1; 
+              jQuery('.registered-listing').find('.members-exhibit > .number').text(addedCnt);
+            } 
+            if(participation.indexOf('lecture') > -1){ 
+              var currentCnt = jQuery('.registered-listing').find('.members-lecture > .number').text(); 
+              var addedCnt = parseInt(currentCnt) + 1; 
+              jQuery('.registered-listing').find('.members-lecture > .number').text(addedCnt); 
+            } 
+        } else{ 
+            jQuery(message).empty();
+            jQuery(message).append('<span style="color:#163a12;">'+resultObj.msg+'</span>');
+            setTimeout(function(){ jQuery(message).empty(); },6000);
+            jQuery(topparentForm).find('input[type="checkbox"]').each(function(){ 
+                this.checked = false;
+            });
+            jQuery('.remove-registration').removeAttr("style");
+            jQuery('.remove-registration').css("display","block"); 
+            // div for listings 
+            var listingDiv = jQuery(".conference-register").find(".listings"); 
+            var compname = resultObj.cname; var participation = resultObj.participation; 
+            var lhtml = '<div class="litem"><div class="cname">'+compname+'</div>';
+            lhtml += '<div class="tkpart">('+participation+')</div></div>';
+            jQuery(listingDiv).append(lhtml);
+            //modify the count
+            if(participation.indexOf('attending') > -1){ 
+              var currentCnt = jQuery('.registered-listing').find('.members-attend > .number').text(); 
+              var addedCnt = parseInt(currentCnt) + 1; 
+              jQuery('.registered-listing').find('.members-attend > .number').text(addedCnt);                  
+            }
+            if(participation.indexOf('exhibiting') > -1){ 
+              var currentCnt = jQuery('.registered-listing').find('.members-exhibit > .number').text();   
+              var addedCnt = parseInt(currentCnt) + 1; 
+              jQuery('.registered-listing').find('.members-exhibit > .number').text(addedCnt);
+            } 
+            if(participation.indexOf('lecture') > -1){ 
+              var currentCnt = jQuery('.registered-listing').find('.members-lecture > .number').text(); 
+              var addedCnt = parseInt(currentCnt) + 1; 
+              jQuery('.registered-listing').find('.members-lecture > .number').text(addedCnt); 
+            }    
+        }
+    }).catch(function(error){ 
+        console.log(error); 
+    });
+});
+
+jQuery('.remove-registration > .remove').on('click', function(){ 
+    var removeBtn = jQuery(this); 
+    var topparent = jQuery(removeBtn).parent();
+    var rmuid = jQuery(topparent).find('input[name="conf_register_rmuid"]').val(); 
+    var rmpid = jQuery(topparent).find('input[name="conf_register_rmpid"]').val();
+    var message = jQuery('.registration-form').find('p.messages');
+    //console.log(remuid); 
+    //check if there are records for the user
+    var data = {}; data["rmuid"] = rmuid; data['rmpid'] = rmpid; 
+    var xhrdatastr = 'data='+JSON.stringify(data)+'&action=check_conference_formsubmit_regdata';
+    var submissionResult = submit_Data(xhrdatastr);  
+    var recvResult = submissionResult
+    .then(function(result){
+        var resultObj = JSON.parse(result); 
+        //if error 
+        if( resultObj.success == false ){
+            jQuery(message).empty();
+            jQuery(message).append('<span style="color:#FF0000;">'+resultObj.msg+'</span>');
+            setTimeout(function(){ jQuery(message).empty(); },6000);  
+        } else if( resultObj.success == true ){ 
+            jQuery(message).empty();
+            jQuery(message).append('<span style="color:#163a12;">'+resultObj.msg+'</span>');
+            setTimeout(function(){ 
+                jQuery(message).empty();
+                var response = confirm("Delete Registration ? (Y/N)"); console.log(response);
+                if(response){ //if true 
+                    xhrdatastr = 'data='+JSON.stringify(data)+'&action=remove_conference_formsubmit_regdata';
+                    submissionResult = submit_Data(xhrdatastr);  
+                    recvResult = submissionResult
+                    .then(function(result){
+                        resultObj = JSON.parse(result); 
+                        //if error 
+                        if( resultObj.success == false ){
+                            jQuery(message).empty();
+                            jQuery(message).append('<span style="color:#FF0000;">'+resultObj.msg+'</span>');
+                            setTimeout(function(){ jQuery(message).empty(); },6000);  
+
+                        } else if( resultObj.success == true && resultObj.removed == true ){ 
+                            jQuery(message).empty();
+                            jQuery(message).append('<span style="color:#FF0000;font-weight:580;">'+resultObj.msg+'</span>');
+                            setTimeout(function(){ jQuery(message).empty(); },6000);
+                            // div for listings 
+                            var listingDiv = jQuery(".conference-register").find(".listings"); 
+                            var compname = resultObj.cname; var prevparticipation = resultObj.participation;
+                            jQuery(listingDiv).find('.litem').each(function(){
+                                var litem = jQuery(this); 
+                                var cnameText = jQuery(litem).find('.cname').text();
+                                if(  cnameText === compname ){ jQuery(litem).remove(); }
+                            });
+                            jQuery('.remove-registration').removeAttr("style");                            
+                            jQuery('.remove-registration').css("display","none"); 
+                            //remove previous count
+                            if(prevparticipation.indexOf('attending') > -1){ 
+                                var currentCnt = jQuery('.registered-listing').find('.members-attend > .number').text(); 
+                                var addedCnt = parseInt(currentCnt) - 1; 
+                                jQuery('.registered-listing').find('.members-attend > .number').text(addedCnt);                  
+                            }
+                            if(prevparticipation.indexOf('exhibiting') > -1){ 
+                                var currentCnt = jQuery('.registered-listing').find('.members-exhibit > .number').text();   
+                                var addedCnt = parseInt(currentCnt) - 1; 
+                                jQuery('.registered-listing').find('.members-exhibit > .number').text(addedCnt);
+                            } 
+                            if(prevparticipation.indexOf('lecture') > -1){ 
+                                var currentCnt = jQuery('.registered-listing').find('.members-lecture > .number').text(); 
+                                var addedCnt = parseInt(currentCnt) - 1; 
+                                jQuery('.registered-listing').find('.members-lecture > .number').text(addedCnt); 
+                            } 
+                        }
+                    }).catch(function(error){ 
+                         console.log(error);
+                    });    
+                } //endif true
+            },500); 
+        }
+    }).catch(function(error){ 
+        console.log(error);
+    });
+});
+
+
+/**-------------------------------*
+ * Submission of data via ajax
+ *--------------------------------*/ 
+function submit_Data(xhrdatastr){
+    var xhrdata = xhrdatastr;
+    return new Promise(function(resolve, reject){ 
+      var xhr = new XMLHttpRequest();
+      xhr.open('POST',window.location.href,true); 
+      xhr.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
+      xhr.send(xhrdata);
+      xhr.onerror = function(){  
+        console.log("Error: " +this.responseText); 
+        reject(this.reponseText);
+      }; 
+      xhr.onload = function(){  
+        if(this.readyState == 4 && this.status == 200){
+            //console.log(this.response); 
+            resolve(this.response); 
+        }
+      };
+    });
+}
+
+------------------------------------------------------------------------------------------------
+    <script>
+    function getErrorMessage(event){ 
+        //check the targetEle 
+        var targetEle = event.target; 
+        if( targetEle.nodeName === 'H3' || targetEle.nodeName === 'H5' ){  
+            var parentEle = targetEle.parentElement;
+            if( !parentEle.hasAttribute('download') ){
+                if( targetEle.querySelector('p.ml-error-message') ){
+                    targetEle.querySelector('p.ml-error-message').remove();    
+                }                
+                var dnode = document.createElement('p'); 
+                if( targetEle.nodeName == 'H5'){ dnode.setAttribute('class','ml-error-message-sm'); }
+                else{ dnode.setAttribute('class','ml-error-message'); }
+                var wnode = document.createTextNode("Content Available To MicroLED Industry Association Members Only");
+                dnode.appendChild(wnode);targetEle.appendChild(dnode); 
+                setTimeout( function(){ 
+                    if( targetEle.querySelector('p.ml-error-message') ){
+                        targetEle.querySelector('p.ml-error-message').remove();    
+                    }
+                    if( targetEle.querySelector('p.ml-error-message-sm') ){
+                        targetEle.querySelector('p.ml-error-message-sm').remove();    
+                    }                                      
+                }, 3000);
+            } 
+        }
+        if( targetEle.nodeName === 'SPAN' || targetEle.nodeName === 'IMG' ){ 
+            var parentEle = targetEle.parentElement; 
+            var topparentEle = targetEle.parentElement.parentElement;
+            if( !topparentEle.hasAttribute('download') ){ 
+                if( parentEle.querySelector('p.ml-error-message') ){
+                    parentEle.querySelector('p.ml-error-message').remove();    
+                }                
+                var dnode = document.createElement('p'); 
+                if( targetEle.nodeName == 'IMG'){ dnode.setAttribute('class','ml-error-message-sm'); }
+                else{ dnode.setAttribute('class','ml-error-message'); }
+                var wnode = document.createTextNode("Content Available To MicroLED Industry Association Members Only");
+                dnode.appendChild(wnode); parentEle.appendChild(dnode); 
+                setTimeout( function(){ 
+                    if( parentEle.querySelector('p.ml-error-message') ){
+                        parentEle.querySelector('p.ml-error-message').remove();    
+                    }
+                    if( parentEle.querySelector('p.ml-error-message-sm') ){
+                        parentEle.querySelector('p.ml-error-message-sm').remove();    
+                    }                  
+                }, 3000); 
+            }
+        }
+    }
+    </script>    
+------------------------------------------------------------------------------------------------------------
